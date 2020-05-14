@@ -5,7 +5,8 @@
 import requests
 import sys
 from datetime import datetime
-
+#tab needed to seperate attribute name with it's data ie: alt-names and rating
+tab = '        '
 # We will reuse this URL string a lot
 URL = "https://api-v3.igdb.com/"
 # You must register for your free key before you can complete this assignment
@@ -38,28 +39,24 @@ if r.status_code != 200:
 # Here, we declare a variable called 'data' and ask for it to parse the response
 # into a json object.
 data = r.json()
-print(data)
 big_data = []
 
 # Here we iterate over each object in the JSON object, and perform a new
 # query based on the ID field to get more information from the API.
 for d in data:
-    #print(d['id'])
     URL2 = URL + endpoints[endpoint] + "/"
-    #print(URL2)
     r = requests.post(URL2, data='fields name,alternative_names,aggregated_rating,aggregated_rating_count,category,summary,dlcs,expansions,first_release_date,game_engines,genres; *; where id='+str(d['id'])+';', headers = HEADER)
     data = r.json()
     big_data.append(data)
 
-#Functions for attributes that cant get their data from /games/ endpoint. ie: category
-#parses time stamp and makes it into readable date
+#parses time stamp and makes it into readable date, void function
 def parse_date(date_value):
     ts = int(date_value)
     print('initial release date:')
     print(tab,datetime.utcfromtimestamp(ts).strftime('%m-%d-%Y'))
-#takes category enum and converts it into its corresponding name
+#takes category enum and converts it into its corresponding name, void function
 def parse_category(cat_enum):
-    #NOTE: The documentation did not provide a url to get category enum name with its value and I tried finding it from the two links
+    #NOTE: The documentation did not provide a url to get category enum name with its value and I tried finding it from the two links 
     # below with no luck so I just hard coded what the enums are with a conditional branch :(
         #URL_cat = 'https://api-v3.igdb.com/games/category/'
         #URL_cat = 'https://api-v3.igdb.com/category'
@@ -81,7 +78,7 @@ def parse_category(cat_enum):
         print(tab, 'Episode')
     else:
         print(tab, 'ERROR: cat_enum not between 0-6, chase really screwed the pooch on this one')
-
+#Prints the genre of the game you selected, void function
 def parse_genre(genre):
     #https://api-v3.igdb.com/genres
     URL_Genre = URL + "genres/"
@@ -91,21 +88,15 @@ def parse_genre(genre):
         r = requests.post(URL_Genre, data='fields name; *; where id='+value+';', headers = HEADER)
         string = r.json()
         print(tab, string[0]['name'])
-#Takes a list of dlc id's and converts them into their name
-def parse_dlc(dlcs):
-    print('DLC(s):')
-    for i in dlcs:
+#Takes a list of game id's and display them. Used for parsing alt-names, expansions, and dlc,
+    #void function
+def parse_games(games):
+    for i in games:
         URL_dlc = 'https://api-v3.igdb.com/games'
         r = requests.post(URL_dlc, data='fields name; *; where id='+str(i)+';', headers = HEADER)
         string = r.json()
         print(tab, string[0]['name'])
-def parse_expansion(expansions):
-    print('Expansion(s):')
-    for i in expansions:
-        URL_exp = 'https://api-v3.igdb.com/games'
-        r = requests.post(URL_exp, data='fields name; *; where id='+str(i)+';', headers = HEADER)
-        string = r.json()
-        print(tab, string[0]['name'])
+#Takes a list of game engine id's and parses them into its name, void function
 def parse_engines(engines):
     print('Game Engine(s):')
     for i in engines:
@@ -113,39 +104,35 @@ def parse_engines(engines):
         r = requests.post(url_engine, data='fields name; *; where id='+str(i)+';', headers = HEADER)
         string = r.json()
         print(tab, string[0]['name'])
-
-
-
-
-
-
-
-#Interface to find more info
+#Finds the alternative names of a game since the /games/:id != /alternative_names/:id, void function
+def parse_altnames(altnames):
+    urlalt = 'https://api-v3.igdb.com/alternative_names'
+    for i in altnames:
+        r = requests.post(urlalt, data='fields name; *; where id='+str(i)+';', headers = HEADER)
+        string = r.json()
+        print(tab, string[0]['name'])
 print('Printing results...')
 num = 1
+#Prints game name and its alt names
 for d in big_data:
     print(num,'. ', d[0]['name'])
-    #make a function to retrieve alt-names with its id
+    if('alternative_names' in d[0]):
+        print('Alternative Name(s):')
+        parse_altnames(d[0]['alternative_names'])
     num += 1
 print('Please pick a search result')
 user_number = int(input())
-tab = '        '
-if(user_number > num or user_number < 0):
+#Constraint to make sure user does not go over or under value
+if(user_number > num or user_number < 1):
     print('Application error: number out of bounds')
     sys.exit(1)
 else:
-    #Accesses data of game and makes a temp list for easy access
-    #print(big_data[user_number-1])
+    #Accesses data of game and makes a temp list for easy access of just the specific game
     temp_list = big_data[user_number-1]
-    #Since there its possible for some attributes to not be present ie: dlc, expansion
-    #All attributes present will be added to a list to be viewed later from temp_list
-    key_list = []
+    #Nested loop responsible for calling functions for attributes ie: ['category'], ['genres']
     for item in temp_list:
         for i in item:
-            #Goes thru each item taken and picks the valid method needed to print
             if(not (i == 'id' or i == 'name')):
-                #print(i)
-                key_list.append(i)
                 if(i == 'aggregated_rating'):
                     print('IGDB Rating:')
                     print(tab, temp_list[0][i])
@@ -160,60 +147,13 @@ else:
                     parse_genre(temp_list[0][i])
                 elif(i == 'dlcs'):
                     print('DLC(s):')
-                    parse_dlc(temp_list[0][i])
+                    parse_games(temp_list[0][i])
                 elif(i == 'expansions'):
                     print('Expansion(s):')
-                    parse_dlc(temp_list[0][i])
+                    parse_games(temp_list[0][i])
                 elif(i == 'game_engines'):
                     print('Game Engine(s):')
                     parse_engines(temp_list[0][i])
                 elif(i == 'summary'):
                     print('Summary of Game:')
                     print(tab, temp_list[0][i])
-   #Last loop for function calls to display attribute data and fetch enum names
-   #OLD METHOD OF FINDING KEYS
-   #NEW METHOD JUST GOES THRU EACH ITEM
-   #for key in key_list:
-   #     if(key == 'aggregated_rating'):
-   #         print('IGDB Rating:')
-   #         print(tab, temp_list[0][key])
-   #      elif(key == 'category'):
-   #         parse_category(temp_list[0][key])
-   #     elif(key == 'first_release_date'):
-   #         parse_date(temp_list[0][key])
-   #     elif(key == 'genres'):
-   #         parse_genre(temp_list[0][key])
-   #     elif(key == 'dlcs'):
-   #         parse_dlc(temp_list[0][key])
-   #     elif(key == 'expansions'):
-   #         parse_expansion(temp_list[0][key])
-   #     elif(key == 'game_engines'):
-   #         parse_engines(temp_list[0][key])
-   #     elif(key == 'summary'):
-   #         print('Summary of Game:')
-   #         print(tab, temp_list[0][key])
-
-
-
-    #Print information
-    #print('Information of Game:', temp_list[0]['name'])
-    #print(tab,'Category: ',temp_list[0]['category'])
-    #if(not(temp_list[0]['dlcs'] in temp_list)):
-    #    print('Big weiner on campus')
-    #print(tab,'DLC(s): ',temp_list[0]['dlcs'])
-    #print(tab,'Expansion(s): ',temp_list[0]['expansions'])
-    #print(tab,'Release Date: ',temp_list[0]['first_release_date'])
-    #print(tab,'Game engine(s): ',temp_list[0]['game_engines'])
-    #print(tab,'Genre(s): ',temp_list[0]['genres'])
-    #print(tab,'IGDB Rating: ',temp_list[0]['aggregated_rating'])
-    #print(tab,'Summary of Game: ',temp_list[0]['summary'])
-
-
-
-
-
-
-
-
-
-
