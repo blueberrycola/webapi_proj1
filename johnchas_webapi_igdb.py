@@ -59,7 +59,7 @@ def parse_date(date_value):
     print(tab,datetime.utcfromtimestamp(ts).strftime('%m-%d-%Y'))
 #takes category enum and converts it into its corresponding name
 def parse_category(cat_enum):
-    #NOTE: The documentation did not provide a url to get category enum name with its value and I tried finding it from the two links 
+    #NOTE: The documentation did not provide a url to get category enum name with its value and I tried finding it from the two links
     # below with no luck so I just hard coded what the enums are with a conditional branch :(
         #URL_cat = 'https://api-v3.igdb.com/games/category/'
         #URL_cat = 'https://api-v3.igdb.com/category'
@@ -114,7 +114,7 @@ def parse_engines(engines):
         string = r.json()
         print(tab, string[0]['name'])
 
-    
+
 
 
 
@@ -142,30 +142,56 @@ else:
     key_list = []
     for item in temp_list:
         for i in item:
-            #TODO: MAKE CONDITIONALS TO FILTER string values
+            #Goes thru each item taken and picks the valid method needed to print
             if(not (i == 'id' or i == 'name')):
                 #print(i)
                 key_list.append(i)
-    #Last loop for function calls to display attribute data and fetch enum names
-    for key in key_list:
-        if(key == 'aggregated_rating'):
-            print('IGDB Rating:')
-            print(tab, temp_list[0][key])
-        elif(key == 'category'):
-            parse_category(temp_list[0][key])
-        elif(key == 'first_release_date'):
-            parse_date(temp_list[0][key])
-        elif(key == 'genres'):
-            parse_genre(temp_list[0][key])
-        elif(key == 'dlcs'):
-            parse_dlc(temp_list[0][key])
-        elif(key == 'expansions'):
-            parse_expansion(temp_list[0][key])
-        elif(key == 'game_engines'):
-            parse_engines(temp_list[0][key])
-        elif(key == 'summary'):
-            print('Summary of Game:')
-            print(tab, temp_list[0][key])
+                if(i == 'aggregated_rating'):
+                    print('IGDB Rating:')
+                    print(tab, temp_list[0][i])
+                elif(i == 'category'):
+                    print('Category:')
+                    parse_category(temp_list[0][i])
+                elif(i == 'first_release_date'):
+                    print('Release Date:')
+                    parse_date(temp_list[0][i])
+                elif(i == 'genres'):
+                    print('Genre(s)')
+                    parse_genre(temp_list[0][i])
+                elif(i == 'dlcs'):
+                    print('DLC(s):')
+                    parse_dlc(temp_list[0][i])
+                elif(i == 'expansions'):
+                    print('Expansion(s):')
+                    parse_dlc(temp_list[0][i])
+                elif(i == 'game_engines'):
+                    print('Game Engine(s):')
+                    parse_engines(temp_list[0][i])
+                elif(i == 'summary'):
+                    print('Summary of Game:')
+                    print(tab, temp_list[0][i])
+   #Last loop for function calls to display attribute data and fetch enum names
+   #OLD METHOD OF FINDING KEYS
+   #NEW METHOD JUST GOES THRU EACH ITEM
+   #for key in key_list:
+   #     if(key == 'aggregated_rating'):
+   #         print('IGDB Rating:')
+   #         print(tab, temp_list[0][key])
+   #      elif(key == 'category'):
+   #         parse_category(temp_list[0][key])
+   #     elif(key == 'first_release_date'):
+   #         parse_date(temp_list[0][key])
+   #     elif(key == 'genres'):
+   #         parse_genre(temp_list[0][key])
+   #     elif(key == 'dlcs'):
+   #         parse_dlc(temp_list[0][key])
+   #     elif(key == 'expansions'):
+   #         parse_expansion(temp_list[0][key])
+   #     elif(key == 'game_engines'):
+   #         parse_engines(temp_list[0][key])
+   #     elif(key == 'summary'):
+   #         print('Summary of Game:')
+   #         print(tab, temp_list[0][key])
 
 
 
